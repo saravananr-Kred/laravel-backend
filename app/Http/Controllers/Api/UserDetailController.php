@@ -1,0 +1,166 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\UserDetail;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+
+class UserDetailController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = UserDetail::with('user');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('name', 'LIKE', '%' . $search . '%');
+        }
+
+        $sortField = $request->input('sort_by', 'id'); 
+        $sortOrder = $request->input('sort_order', 'asc'); 
+
+        $allowedColumns = ['id', 'name', 'email', 'age', 'dob']; 
+        if (in_array($sortField, $allowedColumns)) {
+            $query->orderBy($sortField, $sortOrder);
+        }
+
+        $perPage = $request->input('limit', 10);
+        
+        return $query->paginate($perPage);
+    }
+
+    // GET single user detail
+    public function show($id)
+    {
+        $detail = UserDetail::with('user')->where('user_id', $id)->first();
+
+        if (!$detail) {
+            return response()->json([
+                'message' => 'User detail not found'
+            ], 404);
+        }
+
+        return response()->json($detail);
+    }
+
+    // INSERT new user detail
+    public function store(Request $request)
+    {
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8',
+            'phone' => 'nullable|string|max:255',
+            'age' => 'nullable|integer',
+            'dob' => 'nullable|date',
+            'gender' => 'nullable|string|max:255',
+            'role' => 'nullable|integer',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg|max:4096'
+        ]);
+     
+        
+        $user = DB::transaction(function () use ($validated, $request) {
+
+            // Create user
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+            ]);
+
+            $imagePath = null;
+            if ($request->hasFile('profile_image')) {
+                $imagePath = $request->file('profile_image')->store('avatars', 'public');
+            }
+            
+            // Create user detail (user_id auto inserted)
+            $user->detail()->create([
+                'name' => $validated['name'] ?? '',
+                'email' => $validated['email'] ?? '',
+                'phone' => $validated['phone'] ?? null,
+                'age' => $validated['age'] ?? null,
+                'dob' => $validated['dob'] ?? null,
+                'gender' => $validated['gender'] ?? null,
+                'role' => $validated['role'] ?? null,
+                'profile_image' => $imagePath,
+            ]);
+
+            return $user->load('detail');
+        });
+
+        return response()->json([
+            'message' => 'User created successfully',
+            'data' => $user
+        ], 201);
+    }
+
+    public function update(Request $request, string $id)
+    {
+        $userDetail = UserDetail::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $userDetail->user_id,
+            'phone' => 'nullable|string|max:255',
+            'age' => 'nullable|integer',
+            'dob' => 'nullable|date',
+            'gender' => 'nullable|string|max:255',
+            'role' => 'nullable|integer',
+            'profile_image'   => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
+        ]);
+
+    
+        DB::transaction(function () use ($validated, $userDetail, $request) {
+            $imagePath = $userDetail->profile_image;
+            if ($request->hasFile('profile_image')) {
+                if ($userDetail->profile_image) {
+                    Storage::disk('public')->delete($userDetail->profile_image);
+                }
+                $imagePath = $request->file('profile_image')->store('avatars', 'public');
+            } 
+
+            // Update user table
+            if (isset($validated['name']) || isset($validated['email'])) {
+                $userDetail->user->update([
+                    'name' => $validated['name'] ?? $userDetail->user->name,
+                    'email' => $validated['email'] ?? $userDetail->user->email,
+                ]);
+            }
+
+            // Update user details table
+            $userDetail->update([
+                'name' => $validated['name'] ?? $userDetail->name,
+                'email' => $validated['email'] ?? $userDetail->email,
+                'phone' => $validated['phone'] ?? $userDetail->phone,
+                'age' => $validated['age'] ?? $userDetail->age,
+                'dob' => $validated['dob'] ?? $userDetail->dob,
+                'gender' => $validated['gender'] ?? $userDetail->gender,
+                'role' => $validated['role'] ?? $userDetail->role,
+                'profile_image' => $imagePath,
+            ]);
+        });
+
+        return response()->json([
+            'message' => 'User updated successfully',
+            'data' => $userDetail->load('user')
+        ]);
+    }
+
+    public function destroy(string $id)
+    {
+        $userDetail = UserDetail::findOrFail($id);
+        DB::transaction(function () use ($userDetail) {
+            $userDetail->user->delete(); // deletes user
+        });
+
+        return response()->json([
+            'message' => 'User deleted successfully'
+        ]);
+    }
+}
