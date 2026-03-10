@@ -55,7 +55,7 @@ class AuthController extends Controller
                 
                 $role = $request->role;
 
-                if ($role === 1) {
+                if ($role == 1) {
                     $permission = [
                         'add-user' => true,
                         'edit-user' => true,
@@ -75,18 +75,21 @@ class AuthController extends Controller
                     ];
                 }
                 
+                  $user = $user->load('detail');
+
+                    // Add permission inside user object
+                    $user->permission = $permission;
+                
                 return [
                     'access_token' => $token,
-                    'user' => $user->load('detail'),
-                    'permission' => $permission 
+                    'user' => $user,
                 ];
             });
 
             return response()->json([
                 'access_token' => $result['access_token'],
                 'token_type' => 'Bearer',
-                'user' => $result['user'],
-                'permission' => $result['permission']
+                'user' => $result['user']
             ], 201);
 
         } catch (\Exception $e) {
