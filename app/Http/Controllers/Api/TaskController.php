@@ -135,13 +135,15 @@ class TaskController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        try{
+
         $task = Task::findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'status' => 'sometimes|string|in:On Hold,In Progress,Completed,Open',
             'priority' => 'sometimes|string|in:Low,Medium,High,Very High',
-            'assigned_to' => 'nullable|exists:users,user_id',
+            'assigned_to' => 'nullable|exists:users,id',
             'notes' => 'nullable|string',
             'end_date' => 'nullable|date',
             'documents' => 'nullable|array',
@@ -181,6 +183,11 @@ class TaskController extends Controller
             'message' => 'Task updated successfully',
             'data' => $task->load('assignedTo'),
         ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to add tasks', 'message' => $e->getMessage()], 500);
+        }
+
     }
 
     /**

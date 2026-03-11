@@ -142,11 +142,17 @@ class LicenseController extends Controller
      */
     public function destroy(string $id)
     {
+        try {
+            //code...
+        
         $license = License::findOrFail($id);
         $license->delete();
         return response()->json([
             'message' => 'success',
             'data' => $license
         ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to delete license', 'message' => $e->getMessage()], 500);
+        }
     }
 }

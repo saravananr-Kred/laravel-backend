@@ -13,7 +13,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         // Start the query
-        $query = User::query();
+        $query = \App\Models\User::query();
 
         // Only apply filter if 'search' has a value
         if ($request->filled('search')) {
