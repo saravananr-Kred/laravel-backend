@@ -50,7 +50,7 @@ class TaskController extends Controller
     public function updateStatus(Request $request)
     {
         $request->validate([
-            'status' => 'required|string|in:Pending,In Progress,Completed,Open',
+            'status' => 'required|string|in:On Hold,In Progress,Completed,Open',
         ]);
         $task = Task::findOrFail($request->id);
         $task->status = $request->status;
@@ -71,7 +71,7 @@ class TaskController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'status' => 'sometimes|string|in:Pending,In Progress,Completed,Open',
+            'status' => 'sometimes|string|in:On Hold,In Progress,Completed,Open',
             'priority' => 'sometimes|string|in:Low,Medium,High,Very High',
             'assigned_to' => 'nullable|exists:users,id',
             'notes' => 'nullable|string',
@@ -139,7 +139,7 @@ class TaskController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'status' => 'sometimes|string|in:Pending,In Progress,Completed,Open',
+            'status' => 'sometimes|string|in:On Hold,In Progress,Completed,Open',
             'priority' => 'sometimes|string|in:Low,Medium,High,Very High',
             'assigned_to' => 'nullable|exists:users,user_id',
             'notes' => 'nullable|string',

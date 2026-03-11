@@ -24,65 +24,70 @@ class LicenseController extends Controller
      */
     public function store(Request $request, string $id)
     {
-        $validated = $request->validate([
-            'licenses' => 'required|array',
-            'licenses.*.id' => 'required|integer',
-            'licenses.*.number' => 'required|string',
-            'licenses.*.startDate' => 'required|string',
-            'licenses.*.endDate' => 'required|string',
-            'licenses.*.city' => 'required|string',
-            'licenses.*.state' => 'required|string',
-        ]);
+        try{
+            $validated = $request->validate([
+                'licenses' => 'required|array',
+                'licenses.*.id' => 'required|integer',
+                'licenses.*.number' => 'required|string',
+                'licenses.*.startDate' => 'required|string',
+                'licenses.*.endDate' => 'required|string',
+                'licenses.*.city' => 'required|string',
+                'licenses.*.state' => 'required|string',
+            ]);
 
-        $user = User::find($id);
+            $user = User::find($id);
 
-        if (!$user) {
-            return response()->json([
-                'message' => 'User not found'
-            ], 404);
-        }
+            if (!$user) {
+                return response()->json([
+                    'message' => 'User not found'
+                ], 404);
+            }
 
-        $licenses = [];
+            $licenses = [];
 
-        foreach ($validated['licenses'] as $licenseData) {
+            foreach ($validated['licenses'] as $licenseData) {
 
-            // UPDATE
-            if ($licenseData['id'] != 0) {
+                // UPDATE
+                if ($licenseData['id'] != 0) {
 
-                $license = License::find($licenseData['id']);
+                    $license = License::find($licenseData['id']);
 
-                if ($license) {
-                    $license->update([
+                    if ($license) {
+                        $license->update([
+                            'license_number' => $licenseData['number'],
+                            'license_start_date' => $licenseData['startDate'],
+                            'license_end_date' => $licenseData['endDate'],
+                            'license_city' => $licenseData['city'],
+                            'license_state' => $licenseData['state'],
+                        ]);
+                    }
+
+                } 
+                // CREATE
+                else {
+
+                    $license = License::create([
+                        'user_id' => $id,
                         'license_number' => $licenseData['number'],
                         'license_start_date' => $licenseData['startDate'],
                         'license_end_date' => $licenseData['endDate'],
                         'license_city' => $licenseData['city'],
                         'license_state' => $licenseData['state'],
                     ]);
+
                 }
 
-            } 
-            // CREATE
-            else {
-
-                $license = License::create([
-                    'user_id' => $id,
-                    'license_number' => $licenseData['number'],
-                    'license_start_date' => $licenseData['startDate'],
-                    'license_end_date' => $licenseData['endDate'],
-                    'license_city' => $licenseData['city'],
-                    'license_state' => $licenseData['state'],
-                ]);
-
+                $licenses[] = $license;
             }
 
-            $licenses[] = $license;
+            return response()->json([
+                'message' => 'success',
+                'data' => $licenses
+            ], 201);
+        }catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to add license', 'message' => $e->getMessage()], 500);
         }
 
-        return response()->json([
-            'message' => 'success',
-            'data' => $licenses
-        ], 201);
     }
 
     /**
