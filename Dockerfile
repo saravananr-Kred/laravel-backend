@@ -42,11 +42,11 @@ RUN chown -R www-data:www-data /var/www \
 # Laravel optimization
 RUN php artisan config:cache \
     && php artisan route:cache \
-    && php artisan view:cache
-
+    && php artisan view:cache \
+    && php artisan storage:link
 
 # Expose port
 EXPOSE 8000
 
 # Start Laravel
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+CMD php artisan serve --host=0.0.0.0 --port=$PORT

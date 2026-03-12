@@ -31,15 +31,15 @@ class ResetOtpMail extends Mailable
                     ->view('emails.reset-otp');
     }
 
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.reset-otp',
-            with: [
-                'otp' => $this->otp,
-            ],
-        );
-    }
+    // public function content(): Content
+    // {
+    //     return new Content(
+    //         view: 'emails.reset-otp',
+    //         with: [
+    //             'otp' => $this->otp,
+    //         ],
+    //     );
+    // }
 
     /**
      * Get the attachments for the message.
