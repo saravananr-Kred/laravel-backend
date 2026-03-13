@@ -17,6 +17,11 @@ class Task extends Model
         'file_url',
     ];
 
+    public function comments()
+    {
+        return $this->hasMany(comments::class);
+    }
+
     public function assignedTo()
     {
         return $this->belongsTo(User::class, 'assigned_to');
