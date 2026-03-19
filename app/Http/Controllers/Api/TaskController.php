@@ -77,7 +77,7 @@ class TaskController extends Controller
             'notes' => 'nullable|string',
             'end_date' => 'nullable|date',
             'documents' => 'nullable|array',
-            'documents.*' => 'file|extensions:pdf,doc,docx,jpg,png,xlsx|max:5120',
+            'documents.*' => 'nullable|string|starts_with:user-docs'
         ]);
 
         if (!empty($validated['assigned_to'])) {
@@ -85,24 +85,10 @@ class TaskController extends Controller
             $validated['assigned_to_user_name'] = $user ? $user->name : null;
         }
 
-        if($request->hasFile('documents')) {
-            $fileUrls = [];
-            $destinationPath = public_path('task_documents');
-
-            if (!File::exists($destinationPath)) {
-                File::makeDirectory($destinationPath, 0755, true);
-            }
-
-            foreach ($request->file('documents') as $file) {
-                $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            
-                $file->move($destinationPath, $fileName);
-            
-                $fileUrls[] = 'task_documents/' . $fileName;
-            }
-
-            $commaSeperatedFileUrls = implode(",",$fileUrls);
-            $validated['file_url'] = $commaSeperatedFileUrls;
+        if(count($request->documents) > 0){
+            $validated['file_url'] = implode(",",$request->documents);
+        }else{
+            $validated['file_url'] = null;
         }
 
             $task = Task::create($validated);
@@ -147,25 +133,11 @@ class TaskController extends Controller
             'notes' => 'nullable|string',
             'end_date' => 'nullable|date',
             'documents' => 'nullable|array',
-            'documents.*' => 'file|extensions:pdf,doc,docx,jpg,png,xlsx|max:5120',
+            'documents.*' => 'nullable|string|starts_with:user-docs'
         ]);
 
-        if($request->hasFile('documents')) {
-            $fileUrls = [];
-            $oldFileUrls = explode(",",$task->file_url);
-            foreach ($oldFileUrls as $oldFileUrl) {
-                if (file_exists(public_path('task_documents/' . $oldFileUrl))) {
-                    unlink(public_path('task_documents/' . $oldFileUrl));
-                }
-            }
-            foreach ($request->file('documents') as $file) {
-                $fileName = time() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('task_documents'), $fileName);
-                $fileUrls[] = $fileName;
-            }
-
-            $commaSeperatedFileUrls = implode(",",$fileUrls);
-            $validated['file_url'] = $commaSeperatedFileUrls;
+        if(count($request->documents) > 0){
+            $validated['file_url'] = implode(",",$request->documents);
         }
 
         if (array_key_exists('assigned_to', $validated)) {

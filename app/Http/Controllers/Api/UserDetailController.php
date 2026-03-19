@@ -20,11 +20,23 @@ class UserDetailController extends Controller
             $search = $request->search;
             $query->where('name', 'LIKE', '%' . $search . '%');
         }
+        if ($request->filled('gender')) {
+            $search = $request->gender;
+            $query->where('gender', 'LIKE', '%' . $search . '%');
+        }
+        if ($request->filled('state')) {
+            $search = $request->state;
+            $query->where('state', 'LIKE', '%' . $search . '%');
+        }
+        if ($request->filled('city')) {
+            $search = $request->city;
+            $query->where('city', 'LIKE', '%' . $search . '%');
+        }
 
         $sortField = $request->input('sort_by', 'id'); 
         $sortOrder = $request->input('sort_order', 'asc'); 
 
-        $allowedColumns = ['id', 'name', 'email', 'age', 'dob']; 
+        $allowedColumns = ['id', 'name', 'email', 'dob']; 
         if (in_array($sortField, $allowedColumns)) {
             $query->orderBy($sortField, $sortOrder);
         }
@@ -64,7 +76,7 @@ class UserDetailController extends Controller
             'dob' => 'nullable|date',
             'gender' => 'nullable|string|max:255',
             'role' => 'nullable|integer',
-            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg|max:4096'
+            'profile_image' => 'nullable|url|starts_with:https://ybiwqilvsxrnsjboenek.supabase.co'
         ]);
      
         
