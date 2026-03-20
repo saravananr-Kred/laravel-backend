@@ -88,11 +88,6 @@ class UserDetailController extends Controller
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
             ]);
-
-            $imagePath = null;
-            if ($request->hasFile('profile_image')) {
-                $imagePath = $request->file('profile_image')->store('avatars', 'public');
-            }
             
             // Create user detail (user_id auto inserted)
             $user->detail()->create([
@@ -106,7 +101,7 @@ class UserDetailController extends Controller
                 'dob' => $validated['dob'] ?? null,
                 'gender' => $validated['gender'] ?? null,
                 'role' => $validated['role'] ?? null,
-                'profile_image' => $imagePath,
+                'profile_image' => $validated['profile_image'] ?? null,
             ]);
 
             return $user->load('detail');
@@ -133,17 +128,14 @@ class UserDetailController extends Controller
             'dob' => 'nullable|date',
             'gender' => 'nullable|string|max:255',
             'role' => 'nullable|integer',
-            'profile_image'   => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
+            'profile_image' => 'nullable|url|starts_with:https://ybiwqilvsxrnsjboenek.supabase.co'
         ]);
 
     
         DB::transaction(function () use ($validated, $userDetail, $request) {
             $imagePath = $userDetail->profile_image;
-            if ($request->hasFile('profile_image')) {
-                if ($userDetail->profile_image) {
-                    Storage::disk('public')->delete($userDetail->profile_image);
-                }
-                $imagePath = $request->file('profile_image')->store('avatars', 'public');
+            if ($request->filled('profile_image')) {
+                $imagePath = $request->profile_image;
             } 
 
             // Update user table
