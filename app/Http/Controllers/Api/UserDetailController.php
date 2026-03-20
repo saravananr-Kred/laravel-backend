@@ -22,15 +22,15 @@ class UserDetailController extends Controller
         }
         if ($request->filled('gender')) {
             $search = $request->gender;
-            $query->where('gender', 'LIKE', '%' . $search . '%');
+            $query->where('gender', '=', $search);
         }
         if ($request->filled('state')) {
             $search = $request->state;
-            $query->where('state', 'LIKE', '%' . $search . '%');
+            $query->where('state', '=', $search);
         }
         if ($request->filled('city')) {
             $search = $request->city;
-            $query->where('city', 'LIKE', '%' . $search . '%');
+            $query->where('city', '=', $search);
         }
 
         $sortField = $request->input('sort_by', 'id'); 
