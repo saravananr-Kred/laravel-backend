@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\LicenseController;
 use App\Http\Controllers\Api\UserDetailController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\CommentsController;
+use App\Http\Controllers\Api\AuditLogController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -20,7 +21,13 @@ Route::post('/forgot-password/reset', [AuthController::class, 'resetPassword']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::apiResource('users', UserController::class);
+    
+    Route::get('/broadcast', [UserController::class, 'broadcast']);
 
+    //AuditLog
+    Route::get('/audit-logs', [AuditLogController::class, 'index']);
+    Route::post('/audit-logs', [AuditLogController::class, 'store']);
+    
     //Task
     Route::apiResource('tasks', TaskController::class);
     Route::get('/users/{id}/task', [UserController::class, 'getUserTasks']);

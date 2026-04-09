@@ -92,6 +92,8 @@ class TaskController extends Controller
         }
 
             $task = Task::create($validated);
+        ActivityLogger('Task is created for the user : '.$user->name, 'Task', $user->id, $request->ip());
+
             return response()->json([
                 'message' => 'Task created successfully',
                 'data' => $task->load('assignedTo'),
@@ -150,6 +152,7 @@ class TaskController extends Controller
         }
 
         $task->update($validated);
+        ActivityLogger('Task is updated for the user : '.$user->name, 'Task', $user->id, $request->ip());
 
         return response()->json([
             'message' => 'Task updated successfully',
@@ -169,6 +172,8 @@ class TaskController extends Controller
     {
         $task = Task::findOrFail($id);
         $task->delete();
+        $user = User::where('id', $task->assigned_to)->first();
+        ActivityLogger('Task is deleted for the user : '.$user->name, 'Task', $user->id, null);
 
         return response()->json([
             'message' => 'Task deleted successfully',

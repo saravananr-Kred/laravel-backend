@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class UserController extends Controller
 {
@@ -96,6 +97,27 @@ class UserController extends Controller
         $user->update($validated);
 
         return response()->json($user);
+    }
+
+    public function broadcast(Request $request)
+    {
+        $now = Carbon::now();
+
+        $array = [
+            "Today is ". $now->format('l'), 
+            "Today date is ". $now->format('Y-m-d')
+        ];
+        
+
+        foreach ($array as $item) {
+            event(new \App\Events\LeadPurchased($item));
+
+            sleep(5);
+        }
+
+        return response()->json([
+            'message' => 'Broadcast',
+        ]);
     }
 
     /**

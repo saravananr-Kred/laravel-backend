@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\comments;
 use App\Models\User;
+use App\Models\Task;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -68,6 +69,14 @@ class CommentsController extends Controller
             ], 500);
         }
 
+        $name = '';
+        if($validated['task_id']){
+            $task = Task::findOrFail($validated['task_id']);
+            $name = $task->name;
+        }
+
+        ActivityLogger('Comment is added for the task : '.$name, 'Comment', $validated['user_id'], $request->ip());
+
         return response()->json($comment);
     }
 
@@ -93,6 +102,12 @@ class CommentsController extends Controller
     public function destroy(string $id)
     {
         $comment = comments::where('task_id', $id)->delete();
+        $name = '';
+        if($id){
+            $task = Task::findOrFail($id);
+            $name = $task->name;
+        }
+        ActivityLogger('Comment is deleted for the task : '.$name, 'Comment', $id, null);
 
         return response()->json($comment);
     }

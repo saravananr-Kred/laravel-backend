@@ -80,6 +80,7 @@ class LicenseController extends Controller
                 $licenses[] = $license;
             }
 
+            ActivityLogger('License is added for the user : '.$user->name, 'License', $id, $request->ip());
             return response()->json([
                 'message' => 'success',
                 'data' => $licenses
@@ -131,6 +132,7 @@ class LicenseController extends Controller
             'license_city' => $validated['city'],
             'license_state' => $validated['state'],
         ]);
+        ActivityLogger('License is updated for the user : '.$validate->name, 'License', $id, $request->ip());
         return response()->json([
             'message' => 'success',
             'data' => $license
@@ -147,6 +149,9 @@ class LicenseController extends Controller
         
         $license = License::findOrFail($id);
         $license->delete();
+
+        $user = User::where('id', $license->user_id)->first();
+        ActivityLogger('License is deleted for the user : '.$user->name, 'License', $id, null);
         return response()->json([
             'message' => 'success',
             'data' => $license

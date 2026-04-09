@@ -41,7 +41,10 @@ class UserDetailController extends Controller
             $query->orderBy($sortField, $sortOrder);
         }
 
-        $perPage = $request->input('limit', 10);
+        if($request->limit == 'all'){
+            return $query->get();
+        }
+        $perPage = $request->input('limit', $request->limit ?? 10);
         
         return $query->paginate($perPage);
     }
@@ -170,9 +173,13 @@ class UserDetailController extends Controller
 
     public function destroy(string $id)
     {
-        $userDetail = UserDetail::findOrFail($id);
-        DB::transaction(function () use ($userDetail) {
-            $userDetail->user->delete(); // deletes user
+        $userDetail = UserDetail::where('user_id', $id)->first();
+        $user = $userDetail->user;
+
+        DB::transaction(function () use ($user) {
+            $user->license()->delete(); 
+
+            $user->delete();
         });
 
         return response()->json([

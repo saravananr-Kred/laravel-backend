@@ -86,6 +86,8 @@ class AuthController extends Controller
                 ];
             });
 
+            ActivityLogger('User Registered', 'Registration', $result['user']->id, $request->ip());
+
             return response()->json([
                 'access_token' => $result['access_token'],
                 'token_type' => 'Bearer',
@@ -138,6 +140,8 @@ class AuthController extends Controller
             ];
         }
 
+        ActivityLogger('User Logged In', 'Login', $user->id, $request->ip());
+
         return response()->json([
             'access_token' => $token,
             'token_type'   => 'Bearer',
@@ -170,6 +174,10 @@ class AuthController extends Controller
 
        Mail::to($request->email)->send(new \App\Mail\ResetOtpMail($otp));
 
+       $user_id = User::where('email', $request->email)->first()->id;
+
+       ActivityLogger('Password Reset OTP Sent is sent to user', 'Password Reset', $user_id, $request->ip());
+
         return response()->json([
             'message' => 'An OTP has been sent to your email address.'
         ]);
@@ -194,6 +202,10 @@ class AuthController extends Controller
         if (\Carbon\Carbon::parse($resetRecord->created_at)->addMinutes(10)->isPast()) {
             return response()->json(['message' => 'OTP has expired'], 400);
         }
+
+       $user_id = User::where('email', $request->email)->first()->id;
+
+       ActivityLogger('Password Reset OTP Verified successfully', 'Password Reset', $user_id, $request->ip());
 
         return response()->json(['message' => 'OTP verified successfully.']);
     }
@@ -226,6 +238,10 @@ class AuthController extends Controller
             ->where('email', $request->email)
             ->delete();
 
+        $user_id = User::where('email', $request->email)->first()->id;
+
+        ActivityLogger('Password Reseted successfully', 'Password Reset', $user_id, $request->ip());
+
         return response()->json([
             'message' => 'Password has been reset successfully. You can now login.'
         ]);
@@ -233,7 +249,10 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $user_id = $request->user()->id;
         $request->user()->currentAccessToken()->delete();
+
+        ActivityLogger('Logged out successfully', 'Logout', $user_id, $request->ip());
 
         return response()->json([
             'message' => 'Logged out successfully'
