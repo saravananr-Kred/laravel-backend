@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Task;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Events\liveNotification;
 
 class CommentsController extends Controller
 {
@@ -76,6 +77,18 @@ class CommentsController extends Controller
         }
 
         ActivityLogger('Comment is added for the task : '.$name, 'Comment', $validated['user_id'], $request->ip());
+
+        $data = [
+            'id' => $comment->id,
+            'user_id' => $task['assigned_to'],
+            'type' => 'comment_created',
+            'title' => 'New Comment Added',
+            'message' => $validated['user_name'].' commented on "'.$name.'"',
+            'time' => date('Y-m-d H:i:s'),
+            'read' => false
+        ];
+
+        broadcast(new liveNotification($data, 'Comment'));
 
         return response()->json($comment);
     }

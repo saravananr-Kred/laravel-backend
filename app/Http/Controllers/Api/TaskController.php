@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use App\Models\Task;
 use App\Models\User;
+use App\Events\liveNotification;
 
 class TaskController extends Controller
 {
@@ -92,7 +93,20 @@ class TaskController extends Controller
         }
 
             $task = Task::create($validated);
-        ActivityLogger('Task is created for the user : '.$user->name, 'Task', $user->id, $request->ip());
+            ActivityLogger('Task is created for the user : '.$user->name, 'Task', $user->id, $request->ip());
+
+
+            $data = [
+                'id' => $task->id,
+                'user_id' => $task->assigned_to,
+                'type' => 'task_created',
+                'title' => 'New Task Assigned',
+                'message' => 'You have been assigned to "'.$task->name.'"',
+                'time' => date('Y-m-d H:i:s'),
+                'read' => false
+            ];
+
+            broadcast(new liveNotification($data, 'Task'));
 
             return response()->json([
                 'message' => 'Task created successfully',
@@ -153,6 +167,18 @@ class TaskController extends Controller
 
         $task->update($validated);
         ActivityLogger('Task is updated for the user : '.$user->name, 'Task', $user->id, $request->ip());
+
+        $data = [
+            'id' => $task->id,
+            'user_id' => $task->assigned_to,
+            'type' => 'status_updated',
+            'title' => 'Task Status Updated',
+            'message' => 'The status of "'.$task->name.'" has been updated to "'.$task->status.'"',
+            'time' => date('Y-m-d H:i:s'),
+            'read' => false
+        ];
+
+        broadcast(new liveNotification($data, 'Task'));
 
         return response()->json([
             'message' => 'Task updated successfully',

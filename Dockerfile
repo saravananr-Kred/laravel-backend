@@ -4,27 +4,13 @@ FROM php:8.2-fpm
 # Set working directory
 WORKDIR /var/www
 
-# Install system dependencies
+# Install system dependencies + NGINX and SUPERVISOR
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    zip \
-    unzip \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev
+    git curl zip unzip libpng-dev libonig-dev libxml2-dev libzip-dev \
+    nginx supervisor 
 
 # Install PHP extensions
-RUN docker-php-ext-install \
-    pdo \
-    pdo_mysql \
-    mbstring \
-    exif \
-    pcntl \
-    bcmath \
-    gd \
-    zip
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -35,18 +21,20 @@ COPY . .
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader
 
+# --- CONFIGURATION STEPS ---
+
+# 1. Copy Nginx config (You must create this file in your root)
+COPY ./nginx.conf /etc/nginx/sites-available/default
+
+# 2. Copy Supervisor config (You must create this file in your root)
+COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage
 
-# Laravel optimization
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache \
-    && php artisan storage:link
+# Expose ports (80 for Web, 8080 for Reverb internal)
+EXPOSE 80 8080
 
-# Expose port
-EXPOSE 8000
-
-# Start Laravel
-CMD php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+# Start Supervisor (This starts Nginx, PHP-FPM, Reverb, and Queue)
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
