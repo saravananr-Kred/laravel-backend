@@ -29,14 +29,16 @@ COPY ./nginx.conf /etc/nginx/sites-available/default
 # 2. Copy Supervisor config (You must create this file in your root)
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Set correct permissions
+# Fix permissions for BOTH storage and bootstrap/cache
 RUN chown -R www-data:www-data /var/www \
-    && chmod -R 755 /var/www/storage
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# Expose ports (80 for Web, 8080 for Reverb internal)
-EXPOSE 80 8080
+# Copy and set up the entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN sed -i 's/listen = \/usr\/local\/var\/run\/php-fpm.sock/listen = 127.0.0.1:9000/' /usr/local/etc/php-fpm.d/www.conf
+# Use the entrypoint
+ENTRYPOINT ["entrypoint.sh"]
 
-# Start Supervisor (This starts Nginx, PHP-FPM, Reverb, and Queue)
+# Start Supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

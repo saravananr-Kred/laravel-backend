@@ -2,7 +2,7 @@
 use App\Models\audit_log;
 
 if (!function_exists('ActivityLogger')) {
-    function ActivityLogger($action, $module, $user_id = null, $ip_address)
+    function ActivityLogger($action, $module, $user_id = null, $ip_address = null)
     {
         audit_log::create([
             'action' => $action,
