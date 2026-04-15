@@ -37,6 +37,9 @@ RUN chown -R www-data:www-data /var/www \
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+RUN sed -i 's|listen = /usr/local/var/run/php-fpm.sock|listen = 127.0.0.1:9000|' /usr/local/etc/php-fpm.d/www.conf || \
+    echo "listen = 127.0.0.1:9000" >> /usr/local/etc/php-fpm.d/www.conf
+
 # Use the entrypoint
 ENTRYPOINT ["entrypoint.sh"]
 
