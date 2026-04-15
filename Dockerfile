@@ -36,5 +36,7 @@ RUN chown -R www-data:www-data /var/www \
 # Expose ports (80 for Web, 8080 for Reverb internal)
 EXPOSE 80 8080
 
+RUN sed -i 's/listen = \/usr\/local\/var\/run\/php-fpm.sock/listen = 127.0.0.1:9000/' /usr/local/etc/php-fpm.d/www.conf
+
 # Start Supervisor (This starts Nginx, PHP-FPM, Reverb, and Queue)
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
