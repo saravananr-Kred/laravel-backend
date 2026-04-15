@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Create the directory for the socket if it doesn't exist
+mkdir -p /var/run
+chown www-data:www-data /var/run
+
 # 1. Map Render's dynamic port to Nginx
 if [ -n "$PORT" ]; then
   sed -i "s/listen 80;/listen ${PORT};/" /etc/nginx/sites-available/default

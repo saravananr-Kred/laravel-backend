@@ -37,9 +37,13 @@ RUN chown -R www-data:www-data /var/www \
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN sed -i 's|listen = /usr/local/var/run/php-fpm.sock|listen = 127.0.0.1:9000|' /usr/local/etc/php-fpm.d/www.conf || \
-    echo "listen = 127.0.0.1:9000" >> /usr/local/etc/php-fpm.d/www.conf
+# 1. Tell PHP-FPM to listen on the socket file
+RUN sed -i 's|listen = 127.0.0.1:9000|listen = /var/run/php-fpm.sock|' /usr/local/etc/php-fpm.d/www.conf
 
+# 2. Ensure the socket has the correct permissions so Nginx can talk to it
+RUN sed -i 's|;listen.owner = www-data|listen.owner = www-data|' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's|;listen.group = www-data|listen.group = www-data|' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's|;listen.mode = 0660|listen.mode = 0660|' /usr/local/etc/php-fpm.d/www.conf
 # Use the entrypoint
 ENTRYPOINT ["entrypoint.sh"]
 
