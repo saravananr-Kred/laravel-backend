@@ -32,6 +32,10 @@ class UserDetailController extends Controller
             $search = $request->city;
             $query->where('city', '=', $search);
         }
+        if ($request->filled('department')) {
+            $search = $request->department;
+            $query->where('department', '=', $search);
+        }
 
         $sortField = $request->input('sort_by', 'id'); 
         $sortOrder = $request->input('sort_order', 'asc'); 
@@ -79,6 +83,7 @@ class UserDetailController extends Controller
             'dob' => 'nullable|date',
             'gender' => 'nullable|string|max:255',
             'role' => 'nullable|integer',
+            'department' => 'required|string|max:255',
             'profile_image' => 'nullable|url|starts_with:https://ybiwqilvsxrnsjboenek.supabase.co'
         ]);
      
@@ -104,6 +109,7 @@ class UserDetailController extends Controller
                 'dob' => $validated['dob'] ?? null,
                 'gender' => $validated['gender'] ?? null,
                 'role' => $validated['role'] ?? null,
+                'department' => $validated['department'] ?? null,
                 'profile_image' => $validated['profile_image'] ?? null,
             ]);
 
@@ -131,6 +137,7 @@ class UserDetailController extends Controller
             'dob' => 'nullable|date',
             'gender' => 'nullable|string|max:255',
             'role' => 'nullable|integer',
+            'department' => 'required|string|max:255',
             'profile_image' => 'nullable|url|starts_with:https://ybiwqilvsxrnsjboenek.supabase.co'
         ]);
 
@@ -161,6 +168,7 @@ class UserDetailController extends Controller
                 'dob' => $validated['dob'] ?? $userDetail->dob,
                 'gender' => $validated['gender'] ?? $userDetail->gender,
                 'role' => $validated['role'] ?? $userDetail->role,
+                'department' => $validated['department'] ?? null,
                 'profile_image' => $imagePath,
             ]);
         });

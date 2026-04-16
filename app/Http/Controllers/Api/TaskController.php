@@ -14,9 +14,18 @@ class TaskController extends Controller
     /**
      * Display a listing of tasks.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $tasks = Task::with('assignedTo')->get()->map(function ($task) {
+        $department = $request->query('department');
+        
+        $tasks = Task::with('assignedTo.detail')
+        ->when($department, function ($query) use ($department) {
+            return $query->whereHas('assignedTo.detail', function ($q) use ($department) {
+                $q->where('department', $department);
+            });
+        })
+        ->get()
+        ->map(function ($task) {
             if($task->file_url) {
                 $task->file_url = explode(",",$task->file_url);
                 $task->fileCount = count($task->file_url);

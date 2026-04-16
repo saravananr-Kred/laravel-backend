@@ -18,7 +18,8 @@ class UserDetail extends Model
         'dob',
         'gender',
         'role',
-        'profile_image'
+        'profile_image',
+        'department'
     ];
 
     public function user()
