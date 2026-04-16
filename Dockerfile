@@ -38,7 +38,12 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # 1. Tell PHP-FPM to listen on the socket file
-RUN sed -i 's|listen = 127.0.0.1:9000|listen = /var/run/php-fpm.sock|' /usr/local/etc/php-fpm.d/www.conf
+RUN { \
+        echo '[global]'; \
+        echo 'daemonize = no'; \
+        echo '[www]'; \
+        echo 'listen = /var/run/php-fpm.sock'; \
+    } | tee /usr/local/etc/php-fpm.d/zz-docker.conf
 
 # 2. Ensure the socket has the correct permissions so Nginx can talk to it
 RUN sed -i 's|;listen.owner = www-data|listen.owner = www-data|' /usr/local/etc/php-fpm.d/www.conf && \
